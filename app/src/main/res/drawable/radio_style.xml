@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~  Gain Vulkan Sample -
+  ~
+  ~ Copyright (C) by Gain
+  ~
+  ~ This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
+  -->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true" android:drawable="@drawable/shape_selected"></item>
+    <item android:state_checked="false" android:drawable="@android:color/transparent"></item>
+</selector>

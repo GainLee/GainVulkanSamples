@@ -1,0 +1,36 @@
+#version 450
+
+layout (local_size_x_id = 0, local_size_y_id = 1) in;
+
+layout (binding = 0, r8) uniform readonly image2D inYImage;
+layout (binding = 1, r8) uniform readonly image2D inUImage;
+layout (binding = 2, r8) uniform readonly image2D inVImage;
+
+layout (binding = 3) writeonly buffer OutBuffer {
+    int colorCount[256];
+} histogramBuffer;
+
+layout(push_constant) uniform PushConsts {
+    int uPiexlStride;
+    int vPiexlStride;
+} pixStrides;
+
+void main() {
+    ivec2 yCoord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 uCoord = ivec2(gl_GlobalInvocationID.x/2*pixStrides.uPiexlStride, gl_GlobalInvocationID.y/2);
+    ivec2 vCoord = ivec2(gl_GlobalInvocationID.x/2*pixStrides.vPiexlStride, gl_GlobalInvocationID.y/2);
+
+    float y, u, v, r, g, b;
+    y = imageLoad(inYImage, yCoord).r;
+    u = imageLoad(inUImage, uCoord).r;
+    v = imageLoad(inVImage, vCoord).r;
+    u = u - 0.5;
+    v = v - 0.5;
+    r = y + 1.403 * v;
+    g = y - 0.344 * u - 0.714 * v;
+    b = y + 1.770 * u;
+
+    int avgColor = int((r+g+b)/3*255);
+
+    atomicAdd(histogramBuffer.colorCount[avgColor], 1);
+}

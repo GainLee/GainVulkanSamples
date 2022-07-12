@@ -27,7 +27,7 @@
 
 #include "VulkanInitializers.hpp"
 #include <VulkanContextBase.h>
-#include <VulkanResources.h>
+#include <VulkanImageWrapper.h>
 #include <array>
 
 class Sample_05_LUT : public VulkanContextBase

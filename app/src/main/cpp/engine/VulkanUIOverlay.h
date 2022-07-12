@@ -37,10 +37,11 @@
 
 #include "../util/glm/glm.hpp"
 #include "../util/imgui/imgui.h"
-#include "VulkanResources.h"
+#include "VulkanImageWrapper.h"
+#include "VulkanBufferWrapper.h"
 #include <android/asset_manager.h>
 
-using namespace gain;
+using namespace vks;
 
 namespace vks
 {

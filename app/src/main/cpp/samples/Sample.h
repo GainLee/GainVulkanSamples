@@ -26,13 +26,13 @@
 #define GAINVULKANSAMPLE_SAMPLE_H
 
 #include "../engine/VulkanContextBase.h"
-#include "../engine/VulkanResources.h"
+#include "../engine/VulkanImageWrapper.h"
 #include <android/native_window_jni.h>
 #include <glm/vec2.hpp>
 #include <memory>
 #include <vulkan_wrapper.h>
 
-using namespace gain;
+using namespace vks;
 
 // 与PlaceholderContent中SampleType保持一致
 enum SampleType

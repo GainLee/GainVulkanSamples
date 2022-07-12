@@ -26,7 +26,7 @@
 #define GAINVULKANSAMPLE_SAMPLE_10_PBR_H
 
 #include <VulkanContextBase.h>
-#include <VulkanResources.h>
+#include <VulkanImageWrapper.h>
 #include <VulkanglTFModel.h>
 #include <array>
 
@@ -93,9 +93,9 @@ class Sample_10_PBR : public VulkanContextBase
 
     struct UniformBufferSet
     {
-        std::unique_ptr<Buffer> scene;
-        std::unique_ptr<Buffer> skybox;
-        std::unique_ptr<Buffer> params;
+        std::unique_ptr<vks::Buffer> scene;
+        std::unique_ptr<vks::Buffer> skybox;
+        std::unique_ptr<vks::Buffer> params;
     };
 
     struct Pipelines

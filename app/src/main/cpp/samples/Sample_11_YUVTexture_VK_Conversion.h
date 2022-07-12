@@ -26,7 +26,7 @@
 #define GAINVULKANSAMPLE_SAMPLE_11_YUVTEXTURE_VK_CONVERSION_H
 
 #include <VulkanContextBase.h>
-#include <VulkanResources.h>
+#include <VulkanImageWrapper.h>
 #include <array>
 
 class Sample_11_YUVTexture_VK_Conversion : public VulkanContextBase

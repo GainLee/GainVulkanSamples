@@ -28,7 +28,7 @@
 #include "LutFilter.h"
 #include "VulkanInitializers.hpp"
 #include <VulkanContextBase.h>
-#include <VulkanResources.h>
+#include <VulkanImageWrapper.h>
 #include <array>
 #include <vector>
 
@@ -56,7 +56,7 @@ class Sample_06_MultiLUT : public VulkanContextBase
     } mLUTProperty;
 
     // Uniform buffer block object
-    std::unique_ptr<Buffer> mLutUniformBuffer;
+    std::unique_ptr<vks::Buffer> mLutUniformBuffer;
 
     struct
     {

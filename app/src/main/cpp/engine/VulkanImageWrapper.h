@@ -23,8 +23,8 @@
  * SOFTWARE.
  */
 
-#ifndef GAINVULKANSAMPLE_VULKANRESOURCES_H
-#define GAINVULKANSAMPLE_VULKANRESOURCES_H
+#ifndef GAINVULKANSAMPLE_VULKANIMAGEWRAPPER_H
+#define GAINVULKANSAMPLE_VULKANIMAGEWRAPPER_H
 
 #include <android/bitmap.h>
 #include <android/hardware_buffer_jni.h>
@@ -39,52 +39,8 @@
 #include "../util/VulkanRAIIUtil.h"
 #include "VulkanDeviceWrapper.hpp"
 
-namespace gain
+namespace vks
 {
-class Buffer
-{
-  public:
-    // Create a buffer and allocate the memory.
-    static std::unique_ptr<Buffer> create(
-        const std::shared_ptr<vks::VulkanDeviceWrapper> deviceWrapper, uint32_t size,
-        VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
-
-    // Prefer Buffer::create
-    Buffer(const std::shared_ptr<vks::VulkanDeviceWrapper> deviceWrapper, uint32_t size);
-
-    // Set the buffer content from the data. The buffer must be created with host-visible and
-    // host-coherent properties.
-    bool copyFrom(const void *data);
-
-    VkBuffer getBufferHandle() const
-    {
-        return mBuffer.handle();
-    }
-
-    VkDeviceMemory getMemoryHandle() const
-    {
-        return mMemory.handle();
-    }
-
-    VkDescriptorBufferInfo getDescriptor() const
-    {
-        return {mBuffer.handle(), 0, mSize};
-    }
-
-    VkResult flush(VkDeviceSize size = VK_WHOLE_SIZE, VkDeviceSize offset = 0);
-
-  private:
-    bool initialize(VkBufferUsageFlags usage, VkMemoryPropertyFlags properties);
-
-    const std::shared_ptr<vks::VulkanDeviceWrapper> mContext;
-    VkQueue                                         mVkQueue;
-    uint32_t                                        mSize;
-
-    // Managed handles
-    VulkanBuffer       mBuffer;
-    VulkanDeviceMemory mMemory;
-};
-
 class Image
 {
   public:
@@ -254,6 +210,6 @@ class Image
     VkSamplerYcbcrConversionInfo mSamplerYcbcrConversionInfo;
 };
 
-}        // namespace gain
+}        // namespace vks
 
-#endif        // GAINVULKANSAMPLE_VULKANRESOURCES_H
+#endif        // GAINVULKANSAMPLE_VULKANIMAGEWRAPPER_H

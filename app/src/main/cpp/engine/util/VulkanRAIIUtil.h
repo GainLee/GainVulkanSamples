@@ -28,7 +28,7 @@
 
 #include "vulkan_wrapper.h"
 
-namespace gain
+namespace vks
 {
 // The following code defines RAII wrappers of Vulkan objects.
 // The wrapper of Vk<Object> will be named as Vulkan<Object>, e.g. VkInstance -> VulkanInstance.
@@ -231,6 +231,6 @@ VULKAN_RAII_OBJECT_FROM_POOL(DescriptorSet, VkDescriptorPool, vkFreeDescriptorSe
 
 #undef VULKAN_RAII_OBJECT_FROM_POOL
 
-}        // namespace gain
+}        // namespace vks
 
 #endif        // GAINVULKANSAMPLE_VULKANRAIIUTIL_H

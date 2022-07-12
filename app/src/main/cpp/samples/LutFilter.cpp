@@ -84,15 +84,17 @@ void LutFilter::prepareVertices(bool useStagingBuffers, const void *data, size_t
         // - Delete the host visible (staging) buffer
         // - Use the device local buffers for rendering
 
-        auto stagingBuffers = Buffer::create(
+        auto stagingBuffers = vks::Buffer::create(
             context->deviceWrapper(),
             vertexBufferSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        stagingBuffers->copyFrom(data);
+        stagingBuffers->map();
+        stagingBuffers->copyFrom(data, vertexBufferSize);
+        stagingBuffers->unmap();
 
         mVerticesBuffer =
-            Buffer::create(context->deviceWrapper(),
+            vks::Buffer::create(context->deviceWrapper(),
                            vertexBufferSize,
                            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -125,12 +127,14 @@ void LutFilter::prepareVertices(bool useStagingBuffers, const void *data, size_t
         // Create host-visible buffers only and use these for rendering. This is not advised and
         // will usually result in lower rendering performance
 
-        mVerticesBuffer = Buffer::create(
+        mVerticesBuffer = vks::Buffer::create(
             context->deviceWrapper(),
             vertexBufferSize,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        mVerticesBuffer->copyFrom(data);
+        mVerticesBuffer->map();
+        mVerticesBuffer->copyFrom(data, vertexBufferSize);
+        mVerticesBuffer->unmap();
     }
 }
 

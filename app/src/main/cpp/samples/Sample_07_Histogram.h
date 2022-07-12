@@ -27,7 +27,7 @@
 
 #include "VulkanInitializers.hpp"
 #include <VulkanContextBase.h>
-#include <VulkanResources.h>
+#include <VulkanImageWrapper.h>
 #include <array>
 #include <vector>
 
@@ -39,7 +39,7 @@ class Sample_07_Histogram : public VulkanContextBase
     std::unique_ptr<Image> mUImage;
     std::unique_ptr<Image> mVImage;
 
-    std::unique_ptr<Buffer> mStorageBuffer;
+    std::unique_ptr<vks::Buffer> mStorageBuffer;
 
     YUVSinglePassImage mYPlane;
     YUVSinglePassImage mUPlane;

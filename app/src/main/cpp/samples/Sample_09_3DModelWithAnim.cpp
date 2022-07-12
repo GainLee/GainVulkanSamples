@@ -54,7 +54,7 @@ void Sample_09_3DModelWithAnim::updateUniformBuffers()
     shaderData.values.projection = mCamera.matrices.perspective;
     shaderData.values.model      = mCamera.matrices.view;
 
-    mUniformBuffer->copyFrom(&shaderData.values);
+    mUniformBuffer->copyFrom(&shaderData.values, sizeof(shaderData.values));
 }
 
 void Sample_09_3DModelWithAnim::setupDescriptorSetLayout()
@@ -504,10 +504,11 @@ void Sample_09_3DModelWithAnim::prepareUniformBuffers()
     // Single uniforms like in OpenGL are no longer present in Vulkan. All Shader uniforms are
     // passed via uniform buffer blocksvkCreateDescriptorPool
     mUniformBuffer =
-        Buffer::create(deviceWrapper(),
+        vks::Buffer::create(deviceWrapper(),
                        sizeof(shaderData.values),
                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    mUniformBuffer->map();
 
     updateUniformBuffers();
 }

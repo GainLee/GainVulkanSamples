@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-#include "VulkanResources.h"
+#include "VulkanImageWrapper.h"
 
 #include <android/bitmap.h>
 #include <android/hardware_buffer_jni.h>
@@ -37,84 +37,11 @@
 
 #include <VulkanInitializers.hpp>
 
+#include "VulkanBufferWrapper.h"
 #include "../util/VulkanRAIIUtil.h"
 
-namespace gain
+namespace vks
 {
-std::unique_ptr<Buffer> Buffer::create(const std::shared_ptr<vks::VulkanDeviceWrapper> context,
-                                       uint32_t size, VkBufferUsageFlags usage,
-                                       VkMemoryPropertyFlags properties)
-{
-    auto       buffer  = std::make_unique<Buffer>(context, size);
-    const bool success = buffer->initialize(usage, properties);
-    return success ? std::move(buffer) : nullptr;
-}
-
-Buffer::Buffer(const std::shared_ptr<vks::VulkanDeviceWrapper> context, uint32_t size) :
-    mContext(context), mSize(size), mBuffer(context->logicalDevice), mMemory(context->logicalDevice)
-{}
-
-bool Buffer::initialize(VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
-{
-    // Create buffer
-    const VkBufferCreateInfo bufferCreateInfo = {
-        .sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .size        = mSize,
-        .usage       = usage,
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-    };
-    CALL_VK(vkCreateBuffer(mContext->logicalDevice, &bufferCreateInfo, nullptr, mBuffer.pHandle()));
-
-    // Allocate memory for the buffer
-    VkMemoryRequirements memoryRequirements;
-    vkGetBufferMemoryRequirements(mContext->logicalDevice, mBuffer.handle(), &memoryRequirements);
-    const auto memoryTypeIndex =
-        mContext->getMemoryType(memoryRequirements.memoryTypeBits, properties);
-    const VkMemoryAllocateInfo allocateInfo = {
-        .sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-        .pNext           = nullptr,
-        .allocationSize  = memoryRequirements.size,
-        .memoryTypeIndex = memoryTypeIndex,
-    };
-    CALL_VK(vkAllocateMemory(mContext->logicalDevice, &allocateInfo, nullptr, mMemory.pHandle()));
-
-    vkBindBufferMemory(mContext->logicalDevice, mBuffer.handle(), mMemory.handle(), 0);
-
-    vks::debug::setDeviceMemoryName(mContext->logicalDevice, mMemory.handle(), "VulkanResources-Buffer::initialize-mMemory");
-
-    return true;
-}
-
-bool Buffer::copyFrom(const void *data)
-{
-    void *bufferData = nullptr;
-    CALL_VK(vkMapMemory(mContext->logicalDevice, mMemory.handle(), 0, mSize, 0, &bufferData));
-    memcpy(bufferData, data, mSize);
-    vkUnmapMemory(mContext->logicalDevice, mMemory.handle());
-    return true;
-}
-
-/**
- * Flush a memory range of the buffer to make it visible to the device
- *
- * @note Only required for non-coherent memory
- *
- * @param size (Optional) Size of the memory range to flush. Pass VK_WHOLE_SIZE to flush the
- * complete buffer range.
- * @param offset (Optional) Byte offset from beginning
- *
- * @return VkResult of the flush call
- */
-VkResult Buffer::flush(VkDeviceSize size, VkDeviceSize offset)
-{
-    VkMappedMemoryRange mappedRange = {};
-    mappedRange.sType               = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-    mappedRange.memory              = mMemory.handle();
-    mappedRange.offset              = offset;
-    mappedRange.size                = size;
-    return vkFlushMappedMemoryRanges(mContext->logicalDevice, 1, &mappedRange);
-}
-
 std::unique_ptr<Image> Image::createDeviceLocal(
     const std::shared_ptr<vks::VulkanDeviceWrapper> context, VkQueue queue, const ImageBasicInfo &imageInfo)
 {
@@ -348,13 +275,14 @@ bool Image::setYUVContentForYCbCrImage(const void *data, uint32_t size)
 {
     // Allocate staging buffers
     auto stagingBuffer =
-        Buffer::create(mDeviceWrapper,
+        vks::Buffer::create(mDeviceWrapper,
                        size,
                        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-    const bool success = stagingBuffer->copyFrom(data);
-    assert(success);
+    stagingBuffer->map();
+    stagingBuffer->copyFrom(data, size);
+    stagingBuffer->unmap();
 
     // Copy buffer to image
     VulkanCommandBuffer copyCommand(mDeviceWrapper->logicalDevice, mDeviceWrapper->commandPool);
@@ -431,7 +359,7 @@ bool Image::setContentFromBytes(const void *data, uint32_t bufferSize, uint32_t 
 {
     // Allocate a staging buffer
     auto stagingBuffer =
-        Buffer::create(mDeviceWrapper,
+        vks::Buffer::create(mDeviceWrapper,
                        bufferSize,
                        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -439,8 +367,9 @@ bool Image::setContentFromBytes(const void *data, uint32_t bufferSize, uint32_t 
     vks::debug::setDeviceMemoryName(mDeviceWrapper->logicalDevice, stagingBuffer->getMemoryHandle(), "VulkanResources-Image::setContentFromBytes-stagingBuffer");
 
     // Copy bitmap pixels to the buffer memory
-    const bool success = stagingBuffer->copyFrom(data);
-    assert(success);
+    stagingBuffer->map();
+    stagingBuffer->copyFrom(data, bufferSize);
+    stagingBuffer->unmap();
 
     // Copy buffer to image
     VulkanCommandBuffer copyCommand(mDeviceWrapper->logicalDevice, mDeviceWrapper->commandPool);
@@ -488,15 +417,16 @@ bool Image::setContentFromBytes(const void *data, uint32_t bufferSize, uint32_t 
 bool Image::setCubemapData(const gli::texture_cube &texCube)
 {
     auto stagingBuffer =
-        Buffer::create(mDeviceWrapper,
+        vks::Buffer::create(mDeviceWrapper,
                        texCube.size(),
                        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     vks::debug::setDeviceMemoryName(mDeviceWrapper->logicalDevice, stagingBuffer->getMemoryHandle(), "VulkanResources-Image::createCubeMapFromFile-stagingBuffer");
 
-    const bool success = stagingBuffer->copyFrom(texCube.data());
-    assert(success);
+    stagingBuffer->map();
+    stagingBuffer->copyFrom(texCube.data(), texCube.size());
+    stagingBuffer->unmap();
 
     // Copy buffer to image
     VulkanCommandBuffer copyCommand(mDeviceWrapper->logicalDevice, mDeviceWrapper->commandPool);
@@ -575,7 +505,7 @@ bool Image::setContentFromBitmap(JNIEnv *env, jobject bitmap)
     // Allocate a staging buffer
     const uint32_t bufferSize = info.stride * info.height;
     auto           stagingBuffer =
-        Buffer::create(mDeviceWrapper,
+        vks::Buffer::create(mDeviceWrapper,
                        bufferSize,
                        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -585,9 +515,10 @@ bool Image::setContentFromBitmap(JNIEnv *env, jobject bitmap)
     // Copy bitmap pixels to the buffer memory
     void *bitmapData = nullptr;
     assert(AndroidBitmap_lockPixels(env, bitmap, &bitmapData) == ANDROID_BITMAP_RESULT_SUCCESS);
-    const bool success = stagingBuffer->copyFrom(bitmapData);
+    stagingBuffer->map();
+    stagingBuffer->copyFrom(bitmapData, bufferSize);
+    stagingBuffer->unmap();
     AndroidBitmap_unlockPixels(env, bitmap);
-    assert(success);
 
     // Copy buffer to image
     VulkanCommandBuffer copyCommand(mDeviceWrapper->logicalDevice, mDeviceWrapper->commandPool);
@@ -988,4 +919,4 @@ Image::Image(const std::shared_ptr<vks::VulkanDeviceWrapper> context, VkQueue qu
     mDeviceWrapper(context), mVkQueue(queue), mImage(context->logicalDevice), mMemory(context->logicalDevice), mSampler(context->logicalDevice), mImageView(context->logicalDevice), mImageInfo(imageInfo)
 {}
 
-}        // namespace gain
+}        // namespace vks

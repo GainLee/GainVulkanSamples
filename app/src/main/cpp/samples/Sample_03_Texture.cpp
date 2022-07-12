@@ -195,10 +195,11 @@ void Sample_03_Texture::prepareUniformBuffers()
     // Single uniforms like in OpenGL are no longer present in Vulkan. All Shader uniforms are
     // passed via uniform buffer blocks
     mUniformBuffer =
-        Buffer::create(mDeviceWrapper,
+        vks::Buffer::create(mDeviceWrapper,
                        sizeof(uboVS),
                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    mUniformBuffer->map();
 
     updateUniformBuffers();
 }
@@ -227,7 +228,7 @@ void Sample_03_Texture::updateUniformBuffers()
         uboVS.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(bmpRatio / winRatio, 1.0f, 1.0f));
     }
 
-    mUniformBuffer->copyFrom(&uboVS);
+    mUniformBuffer->copyFrom(&uboVS, sizeof(uboVS));
 }
 
 void Sample_03_Texture::preparePipelines()

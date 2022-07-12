@@ -79,9 +79,9 @@ void Sample_10_PBR::updateUniformBuffers()
 
     for (auto &uniformBuffer : uniformBuffers)
     {
-        uniformBuffer.scene->copyFrom(&shaderValuesScene);
-        uniformBuffer.skybox->copyFrom(&shaderValuesSkybox);
-        uniformBuffer.params->copyFrom(&shaderValuesParams);
+        uniformBuffer.scene->copyFrom(&shaderValuesScene, sizeof(shaderValuesScene));
+        uniformBuffer.skybox->copyFrom(&shaderValuesSkybox, sizeof(shaderValuesSkybox));
+        uniformBuffer.params->copyFrom(&shaderValuesParams, sizeof(shaderValuesParams));
     }
 }
 
@@ -233,7 +233,7 @@ void Sample_10_PBR::prepare3DModel(JNIEnv *env)
     std::string           envMapFile = "environments/papermill.ktx";
     Image::ImageBasicInfo imageInfo  = {format: VK_FORMAT_R16G16B16A16_SFLOAT,
                                        usage: VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT};
-    textures.environmentCube         = gain::Image::createCubeMapFromFile(deviceWrapper(), mGraphicsQueue, mAssetManager, envMapFile, imageInfo);
+    textures.environmentCube         = vks::Image::createCubeMapFromFile(deviceWrapper(), mGraphicsQueue, mAssetManager, envMapFile, imageInfo);
     generateCubemaps();
     generateBRDFLUT();
 }
@@ -272,7 +272,7 @@ void Sample_10_PBR::generateCubemaps()
         // Create target cubemap
         {
             // Image
-            gain::Image::ImageBasicInfo imageInfo = {
+            vks::Image::ImageBasicInfo imageInfo = {
                 format: format,
                 imageType: VK_IMAGE_TYPE_2D,
                 mipLevels: numMips,
@@ -283,7 +283,7 @@ void Sample_10_PBR::generateCubemaps()
             imageInfo.extent.width  = dim;
             imageInfo.extent.height = dim;
             imageInfo.extent.depth  = 1;
-            cubemap                 = gain::Image::createDeviceLocal(deviceWrapper(), mGraphicsQueue, imageInfo);
+            cubemap                 = vks::Image::createDeviceLocal(deviceWrapper(), mGraphicsQueue, imageInfo);
             vks::debug::setSamplerName(device(), cubemap->getSamplerHandle(), "cube_sampler");
         }
 
@@ -775,7 +775,7 @@ void Sample_10_PBR::generateBRDFLUT()
     const VkFormat format = VK_FORMAT_R16G16_SFLOAT;
     const int32_t  dim    = 512;
 
-    gain::Image::ImageBasicInfo imageInfo = {
+    vks::Image::ImageBasicInfo imageInfo = {
         format: format,
         imageType: VK_IMAGE_TYPE_2D,
         mipLevels: 1,
@@ -786,7 +786,7 @@ void Sample_10_PBR::generateBRDFLUT()
     imageInfo.extent.width  = dim;
     imageInfo.extent.height = dim;
     imageInfo.extent.depth  = 1;
-    textures.lutBrdf        = gain::Image::createDeviceLocal(deviceWrapper(), mGraphicsQueue, imageInfo);
+    textures.lutBrdf        = vks::Image::createDeviceLocal(deviceWrapper(), mGraphicsQueue, imageInfo);
 
     // FB, Att, RP, Pipe, etc.
     VkAttachmentDescription attDesc{};
@@ -1504,20 +1504,23 @@ void Sample_10_PBR::prepareUniformBuffers()
     uniformBuffers.resize(mSwapChain.imageCount);
     for (auto &uniformBuffer : uniformBuffers)
     {
-        uniformBuffer.scene = Buffer::create(deviceWrapper(),
+        uniformBuffer.scene = vks::Buffer::create(deviceWrapper(),
                                              sizeof(shaderValuesScene),
                                              VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                              VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        uniformBuffer.scene->map();
 
-        uniformBuffer.skybox = Buffer::create(deviceWrapper(),
+        uniformBuffer.skybox = vks::Buffer::create(deviceWrapper(),
                                               sizeof(shaderValuesSkybox),
                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        uniformBuffer.skybox->map();
 
-        uniformBuffer.params = Buffer::create(deviceWrapper(),
+        uniformBuffer.params = vks::Buffer::create(deviceWrapper(),
                                               sizeof(shaderValuesParams),
                                               VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                                               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        uniformBuffer.params->map();
     }
 
     updateUniformBuffers();

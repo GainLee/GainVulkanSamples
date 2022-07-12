@@ -37,12 +37,10 @@
 #include <vector>
 #include <vulkan_wrapper.h>
 #define GLM_FORCE_RADIANS
-#include "VulkanResources.h"
+#include "VulkanImageWrapper.h"
 #include "VulkanUIOverlay.h"
 #include "camera.hpp"
 #include <glm/glm.hpp>
-
-using namespace gain;
 
 struct YUVSinglePassImage
 {
@@ -181,10 +179,10 @@ class VulkanContextBase
     VulkanDescriptorPool mDescriptorPool;
 
     // Vertex buffer and attributes
-    std::unique_ptr<Buffer> mVerticesBuffer;
+    std::unique_ptr<vks::Buffer> mVerticesBuffer;
 
     // Uniform buffer block object
-    std::unique_ptr<Buffer> mUniformBuffer;
+    std::unique_ptr<vks::Buffer> mUniformBuffer;
 
     struct
     {

@@ -3456,7 +3456,7 @@ void ImGui::PopClipRect()
     window->ClipRect = window->DrawList->_ClipRectStack.back();
 }
 
-// This is normally called by Render(). You may want to call it directly if you want to avoid calling Render() but the gain will be very minimal.
+// This is normally called by Render(). You may want to call it directly if you want to avoid calling Render() but the vks will be very minimal.
 void ImGui::EndFrame()
 {
     ImGuiContext& g = *GImGui;

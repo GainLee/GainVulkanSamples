@@ -264,17 +264,18 @@ void VulkanContextBase::prepareVertices(bool useStagingBuffers, const void *data
         // - Delete the host visible (staging) buffer
         // - Use the device local buffers for rendering
 
-        auto stagingBuffers = Buffer::create(
+        auto stagingBuffers = vks::Buffer::create(
             mDeviceWrapper,
             vertexBufferSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        stagingBuffers->copyFrom(data);
+        stagingBuffers->map();
+        stagingBuffers->copyFrom(data, vertexBufferSize);
 
         vks::debug::setDeviceMemoryName(mDeviceWrapper->logicalDevice, stagingBuffers->getMemoryHandle(), "VulkanContextBase-prepareVertices-stagingBuffers");
 
         mVerticesBuffer =
-            Buffer::create(mDeviceWrapper,
+                vks::Buffer::create(mDeviceWrapper,
                            vertexBufferSize,
                            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -308,12 +309,13 @@ void VulkanContextBase::prepareVertices(bool useStagingBuffers, const void *data
         // Create host-visible buffers only and use these for rendering. This is not advised and
         // will usually result in lower rendering performance
 
-        mVerticesBuffer = Buffer::create(
+        mVerticesBuffer = vks::Buffer::create(
             mDeviceWrapper,
             vertexBufferSize,
             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        mVerticesBuffer->copyFrom(data);
+        mVerticesBuffer->map();
+        mVerticesBuffer->copyFrom(data, vertexBufferSize);
 
         vks::debug::setDeviceMemoryName(mDeviceWrapper->logicalDevice, mVerticesBuffer->getMemoryHandle(), "VulkanContextBase-prepareVertices-mVerticesBuffer-no-staging");
     }

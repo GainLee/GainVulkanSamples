@@ -26,7 +26,7 @@
 #define GAINVULKANSAMPLE_SAMPLE_09_3DMODELWITHANIM_H
 
 #include <VulkanContextBase.h>
-#include <VulkanResources.h>
+#include <VulkanImageWrapper.h>
 #include <array>
 
 #include "VulkanInitializers.hpp"

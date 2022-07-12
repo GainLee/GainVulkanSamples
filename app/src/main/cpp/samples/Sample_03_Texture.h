@@ -26,7 +26,7 @@
 #define GAINVULKANSAMPLE_SAMPLE_03_TEXTURE_H
 
 #include <VulkanContextBase.h>
-#include <VulkanResources.h>
+#include <VulkanImageWrapper.h>
 
 class Sample_03_Texture : public VulkanContextBase
 {

@@ -326,16 +326,18 @@ void Sample_06_MultiLUT::prepareUniformBuffers()
     // Single uniforms like in OpenGL are no longer present in Vulkan. All Shader uniforms are
     // passed via uniform buffer blocks
     mUniformBuffer =
-        Buffer::create(deviceWrapper(),
+        vks::Buffer::create(deviceWrapper(),
                        sizeof(uboVS),
                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    mUniformBuffer->map();
 
     mLutUniformBuffer =
-        Buffer::create(deviceWrapper(),
+            vks::Buffer::create(deviceWrapper(),
                        sizeof(lutUBOVS),
                        VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    mLutUniformBuffer->map();
 
     updateUniformBuffers();
 }
@@ -376,7 +378,7 @@ void Sample_06_MultiLUT::updateUniformBuffers()
                                     glm::radians((float) mYUVImages[0].orientation),
                                     glm::vec3(0.0f, 0.0f, 1.0f));
 
-    mUniformBuffer->copyFrom(&uboVS);
+    mUniformBuffer->copyFrom(&uboVS, sizeof(uboVS));
 
     updateLutMatrix();
 }
@@ -438,7 +440,7 @@ void Sample_06_MultiLUT::updateLutMatrix()
                                        glm::radians((float) mYUVImages[0].orientation),
                                        glm::vec3(0.0f, 0.0f, 1.0f));
 
-    mLutUniformBuffer->copyFrom(&lutUBOVS);
+    mLutUniformBuffer->copyFrom(&lutUBOVS, sizeof(lutUBOVS));
 }
 
 void Sample_06_MultiLUT::preparePipelines()
@@ -727,4 +729,6 @@ void Sample_06_MultiLUT::unInit(JNIEnv *env)
 }
 
 Sample_06_MultiLUT::~Sample_06_MultiLUT()
-{}
+{
+    vkDeviceWaitIdle(device());
+}

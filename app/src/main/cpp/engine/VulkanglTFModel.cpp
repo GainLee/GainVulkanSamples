@@ -358,12 +358,13 @@ Mesh::Mesh(std::shared_ptr<vks::VulkanDeviceWrapper> device, glm::mat4 matrix)
 {
     this->device              = device;
     this->uniformBlock.matrix = matrix;
-    uniformBuffer.buffer      = gain::Buffer::create(
+    uniformBuffer.buffer      = vks::Buffer::create(
         this->device,
         sizeof(uniformBlock),
         VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    uniformBuffer.buffer->copyFrom(&uniformBlock);
+    uniformBuffer.buffer->map();
+    uniformBuffer.buffer->copyFrom(&uniformBlock, sizeof(uniformBlock));
 
     vks::debug::setDeviceMemoryName(this->device->logicalDevice, uniformBuffer.buffer->getMemoryHandle(), "VulkanglTFModel-Mesh::Mesh-uniformBuffer");
 };
@@ -418,11 +419,11 @@ void Node::update()
                 mesh->uniformBlock.jointMatrix[i] = jointMat;
             }
             mesh->uniformBlock.jointcount = (float) numJoints;
-            mesh->uniformBuffer.buffer->copyFrom(&mesh->uniformBlock);
+            mesh->uniformBuffer.buffer->copyFrom(&mesh->uniformBlock, sizeof(mesh->uniformBlock));
         }
         else
         {
-            mesh->uniformBuffer.buffer->copyFrom(&m);
+            mesh->uniformBuffer.buffer->copyFrom(&m, sizeof(m));
         }
     }
 
@@ -1133,18 +1134,20 @@ void Model::loadFromFile(std::string filename, std::shared_ptr<vks::VulkanDevice
 
     // Create staging buffers
     // Vertex data
-    auto vertexStaging = gain::Buffer::create(
+    auto vertexStaging = vks::Buffer::create(
         device,
         vertexBufferSize,
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    vertexStaging->copyFrom(vertexBuffer.data());
+    vertexStaging->map();
+    vertexStaging->copyFrom(vertexBuffer.data(), vertexBufferSize);
+    vertexStaging->unmap();
 
     vks::debug::setDeviceMemoryName(this->device->logicalDevice, vertexStaging->getMemoryHandle(), "VulkanglTFModel-loadFromFile-vertexStaging");
 
     // Create device local buffers
     // Vertex buffer
-    vertices.buffer = gain::Buffer::create(
+    vertices.buffer = vks::Buffer::create(
         device,
         vertexBufferSize,
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
@@ -1165,20 +1168,22 @@ void Model::loadFromFile(std::string filename, std::shared_ptr<vks::VulkanDevice
                     &copyRegion);
 
     // Index data
-    std::unique_ptr<gain::Buffer> indexStaging;
+    std::unique_ptr<vks::Buffer> indexStaging;
     if (indexBufferSize > 0)
     {
-        indexStaging = gain::Buffer::create(
+        indexStaging = vks::Buffer::create(
             device,
             indexBufferSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        indexStaging->copyFrom(indexBuffer.data());
+        indexStaging->map();
+        indexStaging->copyFrom(indexBuffer.data(), indexBufferSize);
+        indexStaging->unmap();
 
         vks::debug::setDeviceMemoryName(this->device->logicalDevice, indexStaging->getMemoryHandle(), "VulkanglTFModel-loadFromFile-indexStaging");
 
         // Create device local buffers
-        indices.buffer = gain::Buffer::create(
+        indices.buffer = vks::Buffer::create(
             device,
             indexBufferSize,
             VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,

@@ -31,7 +31,7 @@
 #include <vector>
 
 #include "VulkanDeviceWrapper.hpp"
-#include "VulkanResources.h"
+#include "VulkanImageWrapper.h"
 
 /*#include <ktx/include/ktx.h>
 #include <ktx/include/ktxvulkan.h>*/
@@ -49,6 +49,7 @@
 #endif
 
 #include "../util/tinygltf/tiny_gltf.h"
+#include "VulkanBufferWrapper.h"
 
 #if defined(__ANDROID__)
 
@@ -179,7 +180,7 @@ struct Mesh
 
     struct UniformBuffer
     {
-        std::unique_ptr<gain::Buffer> buffer;
+        std::unique_ptr<vks::Buffer> buffer;
         VkDescriptorSet               descriptorSet = VK_NULL_HANDLE;
     } uniformBuffer;
 
@@ -281,12 +282,12 @@ struct Model
 
     struct Vertices
     {
-        std::unique_ptr<gain::Buffer> buffer;
+        std::unique_ptr<vks::Buffer> buffer;
     } vertices;
     struct Indices
     {
         int                           count;
-        std::unique_ptr<gain::Buffer> buffer;
+        std::unique_ptr<vks::Buffer> buffer;
     } indices;
 
     glm::mat4 aabb;

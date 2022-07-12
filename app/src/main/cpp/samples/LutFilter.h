@@ -25,9 +25,10 @@
 #ifndef GAINVULKANSAMPLE_LUTFILTER_H
 #define GAINVULKANSAMPLE_LUTFILTER_H
 
-#include <VulkanResources.h>
+#include <VulkanImageWrapper.h>
+#include <VulkanBufferWrapper.h>
 
-using namespace gain;
+using namespace vks;
 
 class VulkanContextBase;
 
@@ -56,7 +57,7 @@ class LutFilter
     VulkanPipeline            pipeline;
 
     // Vertex buffer and attributes
-    std::unique_ptr<Buffer> mVerticesBuffer;
+    std::unique_ptr<vks::Buffer> mVerticesBuffer;
 
     void prepareResource(std::vector<VkDescriptorImageInfo> yuvDescriptors,
                          VkDescriptorImageInfo lutDescriptor, VkDescriptorBufferInfo bufDescriptor);

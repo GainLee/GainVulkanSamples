@@ -42,6 +42,10 @@ android {
         viewBinding true
     }
 
+    lintOptions {
+        abortOnError false
+    }
+
 /*    sourceSets.main.jniLibs.srcDirs file(android.ndkDirectory.path).absolutePath +
             '/sources/third_party/vulkan/src/build-android/jniLibs'*/
 }
